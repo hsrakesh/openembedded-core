@@ -104,6 +104,7 @@ class SignatureGeneratorOEBasicHashMixIn(object):
                                 "").split()
         self.unlockedrecipes = { k: "" for k in self.unlockedrecipes }
         self.buildarch = data.getVar('BUILD_ARCH')
+        self._internal = False
         pass
 
     def tasks_resolved(self, virtmap, virtpnmap, dataCache):
@@ -156,7 +157,12 @@ class SignatureGeneratorOEBasicHashMixIn(object):
             else:
                 return super().get_taskhash(tid, deps, dataCache)
 
+        # get_taskhash will call get_unihash internally in the parent class, we 
+        # need to disable our filter of it whilst this runs else
+        # incorrect hashes can be calculated.
+        self._internal = True
         h = super().get_taskhash(tid, deps, dataCache)
+        self._internal = False
 
         (mc, _, task, fn) = bb.runqueue.split_tid_mcfn(tid)
 
@@ -199,7 +205,7 @@ class SignatureGeneratorOEBasicHashMixIn(object):
         return h
 
     def get_unihash(self, tid):
-        if tid in self.lockedhashes and self.lockedhashes[tid]:
+        if tid in self.lockedhashes and self.lockedhashes[tid] and not self._internal:
             return self.lockedhashes[tid]
         return super().get_unihash(tid)
 
