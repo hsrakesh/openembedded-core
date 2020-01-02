@@ -184,8 +184,7 @@ class SignatureGeneratorOEBasicHashMixIn(object):
                 h_locked = self.lockedsigs[recipename][task][0]
                 var = self.lockedsigs[recipename][task][1]
                 self.lockedhashes[tid] = h_locked
-                unihash = super().get_unihash(tid)
-                self.taskhash[tid] = h_locked
+                unihash = self.get_unihash(tid)
                 #bb.warn("Using %s %s %s" % (recipename, task, h))
 
                 if h != h_locked and h_locked != unihash:
@@ -197,6 +196,11 @@ class SignatureGeneratorOEBasicHashMixIn(object):
         self.lockedhashes[tid] = False
         #bb.warn("%s %s %s" % (recipename, task, h))
         return h
+
+    def get_stampfile_hash(self, tid):
+        if tid in self.lockedhashes and self.lockedhashes[tid]:
+            return self.lockedhashes[tid]
+        return super().get_stampfile_hash(tid)
 
     def get_unihash(self, tid):
         if tid in self.lockedhashes and self.lockedhashes[tid]:
